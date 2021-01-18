@@ -24,9 +24,8 @@ for (let i in scriptArgs) {
       throw `usage: qjs ctfr.js [-h] -d DOMAIN [-o OUTPUT]      
 optional arguments:
   -h, --help            show this help message and exit
-  -d DOMAIN, --domain DOMAIN
-                        Target domain.                            -o OUTPUT, --output OUTPUT
-                        Output file.`;
+  -d DOMAIN, --domain DOMAIN            Target domain.
+  -o OUTPUT, --output OUTPUT            Output file.`;
     break;
 
     case "-o":

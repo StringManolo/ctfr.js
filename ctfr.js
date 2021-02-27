@@ -12,8 +12,19 @@ let run = command => {
 }
 
 let cli = {};
+cli.writeMode = "w";
 for (let i in scriptArgs) {
   switch(scriptArgs[i]) {
+    case "-a":
+    case "--append":
+      cli.writeMode = "a";
+    break;
+
+    case "-c":
+    case "--csv":
+      cli.csv = true;
+    break;
+
     case "-d":
     case "--domain":
       cli.domain = scriptArgs[+i + 1];
@@ -23,9 +34,19 @@ for (let i in scriptArgs) {
     case "--help":
       throw `usage: qjs ctfr.js [-h] -d DOMAIN [-o OUTPUT]      
 optional arguments:
-  -h, --help            show this help message and exit
+  -h, --help            show this help message and exit.
   -d DOMAIN, --domain DOMAIN            Target domain.
-  -o OUTPUT, --output OUTPUT            Output file.`;
+  -o OUTPUT, --output OUTPUT            Output file.
+
+  -a, --append          append to file, don't overwrite.
+  -c, --csv             output in comma separated values.
+  -j, --json            output in json format.
+`;
+    break;
+
+    case "-j":
+    case "--json":
+      cli.json = true;
     break;
 
     case "-o":
@@ -57,6 +78,31 @@ if (!domains) {
   console.log("no domains found");
 }
 
-for (let i in domains) {
-  console.log(domains[i]);
+let resp = "";
+if (cli.json) {
+  resp = JSON.stringify(domains);
+
+} else if (cli.csv) { 
+  for(let i in domains) {
+    resp += domains[i] + (i == domains.length - 1 ? "" : ",") 
+  }
+} else {
+  for (let i in domains) {
+    resp += domains[i] + (i == domains.length - 1 ? "" : "\n")
+  }
+}
+
+if (cli.output) {
+  let fd = std.open(cli.output, cli.writeMode);
+  if (cli.writeMode == "a") {
+    if (cli.json || cli.csv) {
+      resp = "," + resp;
+    } else {
+      resp = "\n" + resp;
+    }
+  } 
+  fd.puts(resp);
+  fd.close();
+} else {
+  console.log(resp);
 }

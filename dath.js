@@ -135,7 +135,7 @@ let scanDomain = options => {
       if (new RegExp("80/open/", "gi").test(resAux) ) {
         aux += run(`curl http://${options.domain} -I --silent`) || `Error requesting http://${options.domain}`;
         let robots = run(`curl http://${options.domain}/robots.txt -L -I --silent`);
-        aux += (new RegExp(" 200 ", "gi").test(robots.split("\n")[0]) ? `\n${cli.color ? COLORS.BLUE : ""}Robots.txt${cli.color ? COLORS.BLUE : ""} found at http://${options.domain}/robots.txt holding ${cli.color ? COLORS.BLUE : ""}${run("curl --silent -L http://" + options.domain + "/robots.txt").split("\n").length}${cli.color ? COLORS.RESET : ""} directives`: ""); 
+        aux += (new RegExp(" 200 ", "gi").test(robots.split("\n")[0]) ? `\n${cli.color ? COLORS.BLUE : ""}Robots.txt${cli.color ? COLORS.RESET : ""} found at http://${options.domain}/robots.txt holding ${cli.color ? COLORS.BLUE : ""}${run("curl --silent -L http://" + options.domain + "/robots.txt").split("\n").length}${cli.color ? COLORS.RESET : ""} directives`: ""); 
       } else if (new RegExp("443/open/", "gi").test(resAux)) {
         aux += run(`curl https://${options.domain} -I --silent`) || `Error requesting https://${options.domain}`;
         let robots = run(`curl https://${options.domain}/robots.txt -L -I --silent`);

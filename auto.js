@@ -62,7 +62,8 @@ if (/\,/g.test(cli.domains)) {
 let ports = cli.range || [80, 443, 8080];
 
 for (let i in cli.domains) {
-  console.log(run(`qjs ctfr.js -d ${cli.domains[i]} -o .internalAutoScan${i} && qjs dath.js -sh -c -f .internalAutoScan${i} -r ${ports}`));
+  console.log(run(`qjs ctfr.js -d ${cli.domains[i]} -o .internalAutoScan${i} && qjs dath.js -sh -c --robots -f .internalAutoScan${i} -r ${ports}`));
+  //console.log(run(`qjs dorks.js -t ${cli.domains[i]} -L`)); 
 }
 
 run("rm .internalAutoScan*");

@@ -57,6 +57,9 @@ optional arguments:
       cli.range = arg;
     break;
 
+    case "--robots":
+      cli.robots = true;
+
     case "-p":
     case "--proxy":
       cli.proxy = arg;
@@ -131,8 +134,12 @@ let scanDomain = options => {
       let aux = "";
       if (new RegExp("80/open/", "gi").test(resAux) ) {
         aux += run(`curl http://${options.domain} -I --silent`) || `Error requesting http://${options.domain}`;
+        let robots = run(`curl http://${options.domain}/robots.txt -L -I --silent`);
+        aux += (new RegExp(" 200 ", "gi").test(robots.split("\n")[0]) ? `\n${cli.color ? COLORS.BLUE : ""}Robots.txt${cli.color ? COLORS.BLUE : ""} found at http://${options.domain}/robots.txt holding ${cli.color ? COLORS.BLUE : ""}${run("curl --silent -L http://" + options.domain + "/robots.txt").split("\n").length}${cli.color ? COLORS.RESET : ""} directives`: ""); 
       } else if (new RegExp("443/open/", "gi").test(resAux)) {
         aux += run(`curl https://${options.domain} -I --silent`) || `Error requesting https://${options.domain}`;
+        let robots = run(`curl https://${options.domain}/robots.txt -L -I --silent`);
+        aux += (new RegExp(" 200 ", "gi").test(robots.split("\n")[0]) ? `\n${cli.color ? COLORS.BLUE : ""}Robots.txt${cli.color ? COLORS.RESET : ""} found at https://${options.domain}/robots.txt holding ${cli.color ? COLORS.BLUE : ""}${run("curl --silent -L https://" + options.domain + "/robots.txt").split("\n").length}${cli.color ? COLORS.RESET : ""} directives`: "");
       }
       if (aux) {
         aux = aux.split("\n");
@@ -157,6 +164,7 @@ domains[domains.length-1].length < 1 && domains.pop();
 for(let i = 0; i < domains.length; ++i) {
   if (!/\*/g.test(domains[i]) && !/\@/g.test(domains[i])) {
     scanDomain({ domain: domains[i], range: cli.range })
+    std.out.flush();
   }
 }
 

@@ -27,7 +27,7 @@ for (let i in scriptArgs) {
 
     case "-d":
     case "--domain":
-      cli.domain = scriptArgs[+i + 1];
+      cli.domain = "."+scriptArgs[+i + 1];
     break;
 
     case "-h":
@@ -71,6 +71,8 @@ for (let i in api) {
     domains.push(aux[j]);
   }
 }
+
+domains.push(cli.domain.substring(1));
 
 domains = [...new Set(domains)];
 

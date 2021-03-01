@@ -8,6 +8,11 @@ let quit = msg => {
 
 let debug = args => console.log(`DEBUG: ${args}`);
 
+let domSinks = url => {
+  let code = run(`${url} --silent -L`)
+  
+}
+
 const COLORS = {
   RED: "\x1b[31m",
   RESET: "\x1b[0m",
@@ -95,7 +100,7 @@ let scanHeaders = headers => {
       if(!new RegExp("httpOnly", "gi").test(h)) {
         sch = true;
       } if (!new RegExp("secure", "gi").test(h)) {
-        scs = true;
+        scc = true;
       }
     }
   }
@@ -107,7 +112,7 @@ let scanHeaders = headers => {
   if (scc) res += `    Missing ${cli.color ? COLORS.BLUE : ""}secure${cli.color ? COLORS.RESET : ""} flag in set-cookie header directive\n`;
 
   if (res) {
-    console.log(`  Missing headers:\n${res}`);
+    console.log(`\n  Missing headers:\n${res}`);
   }
 }
 
@@ -135,11 +140,84 @@ let scanDomain = options => {
       if (new RegExp("80/open/", "gi").test(resAux) ) {
         aux += run(`curl http://${options.domain} -I --silent`) || `Error requesting http://${options.domain}`;
         let robots = run(`curl http://${options.domain}/robots.txt -L -I --silent`);
-        aux += (new RegExp(" 200 ", "gi").test(robots.split("\n")[0]) ? `\n${cli.color ? COLORS.BLUE : ""}Robots.txt${cli.color ? COLORS.RESET : ""} found at http://${options.domain}/robots.txt holding ${cli.color ? COLORS.BLUE : ""}${run("curl --silent -L http://" + options.domain + "/robots.txt").split("\n").length}${cli.color ? COLORS.RESET : ""} directives`: ""); 
+debug(robots)
+
+        if (new RegExp("\r\n\r\n|\n\n|\r\r", "gm").test(robots)) {
+          if (new RegExp("\r\n\r\n", "gm").test(robots)) {
+            robots = robots.split("\r\n\r\n");
+          } else if (new RegExp("\n\n", "gm").test(robots)) {
+            robots = robots.split("\n\n");
+          } else {
+            robots = robots.split("\r\r");
+          }
+          robots = robots[robots.length - 2].split(" ")[1];
+        } else {
+          robots = robots.split(" ")[1];
+        }
+
+        let validRobots = false;
+        let numOfDirect = 0;
+        let tenFirst = [];
+        if("200" == robots) {
+          let aux = run("curl --silent -L http://" + options.domain + "/robots.txt");
+          if (new RegExp("user-agent", "gim").test(aux) ||
+            new RegExp("disallow", "gim").test(aux) ||
+            new RegExp("allow", "gim").test(aux)) {
+            validRobots = true;
+            let aux2 = aux.split("\n");
+            numOfDirect = aux2.length;
+            for (let i in aux2) {
+              if (i > 10) {
+                tenFirst.push("...");
+                break;
+              }
+              tenFirst.push(aux2[i]);
+            }
+          }
+        }
+  
+        aux += (validRobots ? `\n${cli.color ? COLORS.BLUE : ""}Robots.txt${cli.color ? COLORS.RESET : ""} found at http://${options.domain}/robots.txt holding ${cli.color ? COLORS.BLUE : ""}${numOfDirect}${cli.color ? COLORS.RESET : ""} directives:\n${JSON.stringify(tenFirst, null, 4)}`: ``);
+
       } else if (new RegExp("443/open/", "gi").test(resAux)) {
         aux += run(`curl https://${options.domain} -I --silent`) || `Error requesting https://${options.domain}`;
         let robots = run(`curl https://${options.domain}/robots.txt -L -I --silent`);
-        aux += (new RegExp(" 200 ", "gi").test(robots.split("\n")[0]) ? `\n${cli.color ? COLORS.BLUE : ""}Robots.txt${cli.color ? COLORS.RESET : ""} found at https://${options.domain}/robots.txt holding ${cli.color ? COLORS.BLUE : ""}${run("curl --silent -L https://" + options.domain + "/robots.txt").split("\n").length}${cli.color ? COLORS.RESET : ""} directives`: "");
+
+        if (new RegExp("\r\n\r\n|\n\n|\r\r", "gm").test(robots)) {
+          if (new RegExp("\r\n\r\n", "gm").test(robots)) {
+            robots = robots.split("\r\n\r\n");
+          } else if (new RegExp("\n\n", "gm").test(robots)) {
+            robots = robots.split("\n\n");
+          } else {
+            robots = robots.split("\r\r");
+          }
+          robots = robots[robots.length - 2].split(" ")[1];
+        } else {
+          robots = robots.split(" ")[1];
+        }
+
+        let validRobots = false;
+        let numOfDirect = 0;
+        let tenFirst = [];
+        if("200" == robots) {
+          let aux = run("curl --silent -L https://" + options.domain + "/robots.txt");
+          if (new RegExp("user-agent", "gim").test(aux) ||
+            new RegExp("disallow", "gim").test(aux) ||
+            new RegExp("allow", "gim").test(aux)) {
+            validRobots = true;
+            let aux2 = aux.split("\n");
+            numOfDirect = aux2.length;
+            for (let i in aux2) {
+              if (i > 10) {
+                tenFirst.push("...");
+                break;
+              }
+              tenFirst.push(aux2[i]);
+            }
+          }
+        }
+
+        aux += (validRobots ? `\n${cli.color ? COLORS.BLUE : ""}Robots.txt${cli.color ? COLORS.RESET : ""} found at https://${options.domain}/robots.txt holding ${cli.color ? COLORS.BLUE : ""}${numOfDirect}${cli.color ? COLORS.RESET : ""} directives:\n${JSON.stringify(tenFirst, null, 4)}`: ``);
+
       }
       if (aux) {
         aux = aux.split("\n");
@@ -147,10 +225,10 @@ let scanDomain = options => {
         for (let i in aux) {
           console.log(`    ${aux[i]}`)
         }
-        scanHeaders(aux);
+        scanHeaders(aux)
       }
     }
-    console.log(`\n`);
+    console.log(`\n`)
   }
 
 }
@@ -164,7 +242,6 @@ domains[domains.length-1].length < 1 && domains.pop();
 for(let i = 0; i < domains.length; ++i) {
   if (!/\*/g.test(domains[i]) && !/\@/g.test(domains[i])) {
     scanDomain({ domain: domains[i], range: cli.range })
-    std.out.flush();
   }
 }
 
